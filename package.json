@@ -1,0 +1,31 @@
+{
+  "name": "bselect",
+  "version": "1.0.0",
+  "description": "BSelect - dependency-free custom select with search, checkboxes, groups and pagination. All CSS lives inside the JS file.",
+  "main": "bselect.js",
+  "unpkg": "bselect.js",
+  "jsdelivr": "bselect.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test/bselect.test.js",
+    "test:demo": "node test/demo.smoke.js",
+    "test:all": "node test/bselect.test.js && node test/demo.smoke.js",
+    "demo": "node tools/serve.js"
+  },
+  "keywords": [
+    "select",
+    "multi-select",
+    "custom-select",
+    "dropdown",
+    "vanilla-js",
+    "no-dependencies",
+    "search",
+    "pagination",
+    "grouped-options",
+    "rtl"
+  ],
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "jsdom": "^25.0.1"
+  }
+}
