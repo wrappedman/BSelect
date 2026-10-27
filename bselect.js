@@ -615,7 +615,7 @@
     '.BSelect__groupAction:hover { background: var(--B-primary-soft); border-color: var(--B-primary); }',
     '.BSelect__groupAction:focus-visible { outline: 2px solid var(--B-primary); outline-offset: 1px; }',
     '.BSelect__groupAction:disabled { opacity: 0.45; cursor: default; }',
-    '.BSelect__groupBody { display: block; }',
+    '.BSelect__groupBody { display: block; padding-inline-start: 24px; }',
     '.BSelect__option {',
     '  position: relative;',
     '  display: flex;',
