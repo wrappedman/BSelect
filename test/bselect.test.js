@@ -172,11 +172,19 @@ test('groups are read from native <select> markup with optgroups', () => {
   assert.strictEqual(select._listEl.querySelectorAll('.BSelect__group').length, 2);
   assert.ok(heads[0].textContent.includes('گروه الف'));
 
-  // collapse the first group from its toggle button
+  // collapse the first group from its toggle button: the group must stay
+  // visible (header only), never disappear from the list
   click(heads[0].querySelector('[data-group-toggle]'));
-  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__group').length, 1);
-  assert.ok(!select._listEl.textContent.includes('گروه الف'));
-  assert.strictEqual(select.getValues().length, 1);
+  const groupsAfterCollapse = select._listEl.querySelectorAll('.BSelect__group');
+  assert.strictEqual(groupsAfterCollapse.length, 2, 'the collapsed group keeps its header');
+  assert.ok(select._listEl.textContent.includes('گروه الف'));
+  assert.strictEqual(groupsAfterCollapse[0].querySelectorAll('.BSelect__option').length, 0);
+  assert.strictEqual(groupsAfterCollapse[1].querySelectorAll('.BSelect__option').length, 1);
+  assert.strictEqual(
+    groupsAfterCollapse[0].querySelector('[data-group-toggle]').getAttribute('aria-expanded'),
+    'false'
+  );
+  assert.strictEqual(select.getValues().length, 1, 'collapsing never changes the selection');
   select.destroy();
   assert.strictEqual(el.style.display, '');
 });
@@ -542,5 +550,118 @@ test('on()/off() deliver the same payload as the option callbacks', () => {
   select.select('b');
   assert.deepStrictEqual(fromOn, [['a']]);
   assert.deepStrictEqual(fromOption, [['a'], ['b']]); // single select replaces the value
+  select.destroy();
+});
+
+test('collapsing a group only hides its options, never the group itself', () => {
+  const el = mount('<div></div>');
+  const select = new BSelect(el, {
+    data: [
+      { label: 'گروه الف', options: ['a1', 'a2'] },
+      { label: 'گروه ب', options: ['b1', 'b2'] }
+    ],
+    multiple: true,
+    searchable: true
+  });
+  select.open();
+  select.setValues(['a1']);
+
+  const toggle = () => select._listEl.querySelector('.BSelect__group [data-group-toggle]');
+  const groups = () => Array.from(select._listEl.querySelectorAll('.BSelect__group'));
+
+  click(toggle());
+  assert.strictEqual(groups().length, 2);
+  assert.ok(groups()[0].textContent.includes('گروه الف'));
+  assert.strictEqual(groups()[0].querySelectorAll('.BSelect__option').length, 0);
+  assert.strictEqual(groups()[1].querySelectorAll('.BSelect__option').length, 2);
+  assert.strictEqual(select._open, true, 'collapsing must not close the dropdown');
+  assert.deepStrictEqual(select.getValues(), ['a1']);
+
+  // badge / group action still reflect the hidden items
+  assert.ok(groups()[0].querySelector('.BSelect__groupBadge').textContent.includes('2'));
+  assert.strictEqual(groups()[0].querySelector('[data-group-check]').textContent, 'انتخاب گروه');
+
+  // the group action works even while the group is collapsed (selects hidden items)
+  click(groups()[0].querySelector('[data-group-check]'));
+  assert.deepStrictEqual(select.getValues(), ['a1', 'a2']);
+  assert.strictEqual(groups()[0].querySelector('[data-group-check]').textContent, 'حذف گروه');
+  click(groups()[0].querySelector('[data-group-check]'));
+  assert.deepStrictEqual(select.getValues(), []);
+
+  // collapsing every group keeps all headers and shows no "empty" message
+  click(groups()[1].querySelector('[data-group-toggle]'));
+  assert.strictEqual(groups().length, 2);
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__option').length, 0);
+  assert.strictEqual(select._emptyEl.hidden, true);
+
+  // expanding again brings the options back
+  click(groups()[0].querySelector('[data-group-toggle]'));
+  assert.strictEqual(groups()[0].querySelectorAll('.BSelect__option').length, 2);
+
+  // searching ignores the collapsed state (finds hidden items and shows them)
+  click(groups()[0].querySelector('[data-group-toggle]')); // collapse group الف again
+  type(select._searchEl, 'a1');
+  assert.deepStrictEqual(optionEls(select).map((n) => n.textContent.trim()), ['a1']);
+  type(select._searchEl, '');
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__group').length, 2, 'headers stay');
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__option').length, 0,
+    'both groups are collapsed again after clearing the search');
+  click(groups()[1].querySelector('[data-group-toggle]'));
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__option').length, 2,
+    'expanding a group brings its options back');
+  select.destroy();
+});
+
+test('collapsed groups do not break pagination or the page counters', () => {
+  const el = mount('<div></div>');
+  const select = new BSelect(el, {
+    data: [
+      { label: 'G1', options: ['1', '2', '3'] },
+      { label: 'G2', options: ['4', '5', '6'] },
+      { label: 'G3', options: ['7', '8', '9'] }
+    ],
+    pagination: true,
+    pageSize: 3
+  });
+  select.open();
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__option').length, 3);
+  assert.strictEqual(select._pageCount(), 3);
+
+  click(select._listEl.querySelector('[data-group-toggle]')); // collapse G1
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__group').length, 2, 'G1 header still rendered');
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__option').length, 3);
+  assert.strictEqual(select._pageCount(), 2, 'pagination counts only the visible options');
+
+  click(select._footerEl.querySelector('[data-page="next"]'));
+  assert.strictEqual(select._page, 2);
+  assert.strictEqual(select._listEl.querySelectorAll('.BSelect__option').length, 3);
+  assert.ok(select._pageInfoEl.textContent.includes('6'));
+
+  // collapse the group that is showing on the last page: the page is clamped
+  // instead of leaving an empty page behind
+  const lastPageSelect = new BSelect(mount('<div></div>'), {
+    data: [
+      { label: 'G1', options: ['1', '2', '3'] },
+      { label: 'G2', options: ['4', '5', '6'] },
+      { label: 'G3', options: ['7', '8', '9'] }
+    ],
+    pagination: true,
+    pageSize: 3
+  });
+  lastPageSelect.open();
+  click(lastPageSelect._footerEl.querySelector('[data-page="next"]'));
+  click(lastPageSelect._footerEl.querySelector('[data-page="next"]'));
+  assert.strictEqual(lastPageSelect._page, 3);
+  assert.deepStrictEqual(optionEls(lastPageSelect).map((n) => n.textContent.trim()), ['7', '8', '9']);
+
+  click(lastPageSelect._listEl.querySelector('[data-group-toggle]')); // collapse G3
+  assert.strictEqual(lastPageSelect._pageCount(), 2);
+  assert.strictEqual(lastPageSelect._page, 2, 'the page is clamped instead of becoming empty');
+  assert.strictEqual(lastPageSelect._listEl.querySelectorAll('.BSelect__option').length, 3);
+  assert.ok(lastPageSelect._listEl.textContent.includes('G3'),
+    'the collapsed group keeps its header on the clamped page');
+  assert.strictEqual(lastPageSelect._emptyEl.hidden, true);
+  lastPageSelect.destroy();
+
   select.destroy();
 });

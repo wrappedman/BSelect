@@ -1777,22 +1777,29 @@
     var self = this;
     var visible = [];
     var matches = Object.create(null);
+    var collapsedKeys = [];
 
     this._groups.forEach(function (group) {
-      if (self._collapsed[group.key] && !term) return;
+      // A collapsed group keeps its header (and its badge / group action) but
+      // contributes no navigable items to the visible list.
+      var isCollapsed = !!self._collapsed[group.key] && !term;
+      if (isCollapsed) collapsedKeys.push(group.key);
+      var groupMatches = matches[group.key] = [];
       group.items.forEach(function (item) {
-        var haystack = norm(item.label + ' ' + item.value + ' ' + item.description + ' ' + (item.groupLabel || ''));
-        var ok = !term || haystack.indexOf(term) !== -1;
-        if (ok) {
+        if (!isCollapsed) {
+          var haystack = norm(item.label + ' ' + item.value + ' ' + item.description + ' ' + (item.groupLabel || ''));
+          if (term && haystack.indexOf(term) === -1) return;
           visible.push(item);
-          if (!matches[group.key]) matches[group.key] = [];
-          matches[group.key].push(item);
         }
+        // collapsed groups keep their full item list so the header badge and the
+        // "select whole group" action stay correct while the group is closed.
+        groupMatches.push(item);
       });
     });
 
     this._visibleItems = visible;
     this._matchCounts = matches;
+    this._collapsedKeys = collapsedKeys;
   };
 
   BSelect.prototype._groupHeadHtml = function (group) {
@@ -1886,28 +1893,48 @@
     this._rendered = slice;
 
     var html = '';
-    var index = 0;
-    while (index < slice.length) {
-      var key = slice[index].groupKey;
-      var end = index;
-      while (end < slice.length && slice[end].groupKey === key) end += 1;
-      var run = slice.slice(index, end);
+    var term = norm(this._term);
+    var self = this;
+    var pageEnd = start + slice.length;
+    var cursor = 0;
+    var collapsedCount = 0;
+
+    // Walk the groups in their original order so a collapsed group renders its
+    // header (instead of disappearing), while its options are hidden.
+    this._groups.forEach(function (group) {
+      var isCollapsed = !!self._collapsed[group.key] && !term;
+      var groupItems = isCollapsed ? [] : (self._matchCounts[group.key] || []);
+      var groupStart = cursor;
+      var groupEnd = cursor + groupItems.length;
+      cursor = groupEnd;
+
+      var run = [];
+      if (isCollapsed) {
+        if (!group.items.length) return;
+        collapsedCount += 1;
+      } else {
+        var from = Math.max(start, groupStart);
+        var to = Math.min(pageEnd, groupEnd);
+        if (from >= to) return;
+        run = groupItems.slice(from - groupStart, to - groupStart);
+      }
+
       var runHtml = '';
-      for (var r = 0; r < run.length; r++) runHtml += this._optionHtml(run[r]);
-      var group = this._groupMap[key];
-      if (group && group.label != null && this.opts.groups !== false) {
+      for (var r = 0; r < run.length; r++) runHtml += self._optionHtml(run[r]);
+      var hasGlobalGroup = group.label != null && self.opts.groups !== false;
+      if (hasGlobalGroup) {
         html += '<div class="BSelect__group" data-group-key="' + escAttr(group.key) + '">' +
-          this._groupHeadHtml(group) +
+          self._groupHeadHtml(group) +
           '<div class="BSelect__groupBody">' + runHtml + '</div></div>';
       } else {
         html += runHtml;
       }
-      index = end;
-    }
+    });
 
     this._listEl.innerHTML = html;
-    this._emptyEl.hidden = total > 0;
-    if (!total) {
+    var hasContent = total > 0 || collapsedCount > 0;
+    this._emptyEl.hidden = hasContent;
+    if (!hasContent) {
       this._emptyEl.textContent = this._items.length ? this.opts.noResultsText || this.opts.texts.noResultsText
         : this.opts.emptyText || this.opts.texts.emptyText;
     }
