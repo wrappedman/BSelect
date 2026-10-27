@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BSelect — نمونه‌های تعاملی</title>
+  <meta name="description" content="BSelect: سلکت سفارشی جاوااسکریپت بدون وابستگی، با جستجو، چک‌باکس، دسته‌بندی و صفحه‌بندی. تمام CSS داخل فایل JS.">
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <header class="demo-hero">
+    <div class="demo-hero-inner">
+      <div class="demo-logo">B<span>Select</span></div>
+      <h1>سلکت سفارشی، بدون هیچ وابستگی</h1>
+      <p class="demo-lead">
+        یک ماژول جاوااسکریپت تک‌فایلی؛ تمام CSS داخل خود JS تعریف شده است و برای کار کردن
+        به jQuery، Bootstrap یا هیچ کتابخانه‌ی دیگری نیاز ندارد. همه‌ی کلاس‌ها با حرف
+        <code>B</code> شروع می‌شوند تا با بقیه‌ی برنامه تداخل نداشته باشند.
+      </p>
+      <ul class="demo-badges">
+        <li>بدون وابستگی</li>
+        <li>CSS داخل JS</li>
+        <li>جستجوی قابل خاموش/روشن</li>
+        <li>چک‌باکس در حالت چند انتخابی</li>
+        <li>دسته‌بندی و صفحه‌بندی</li>
+        <li>پشتیبانی RTL</li>
+        <li>قابل دسترس با کیبورد</li>
+      </ul>
+      <div class="demo-hero-actions">
+        <a class="demo-btn demo-btn--primary" href="#example-basic">دیدن نمونه‌ها</a>
+        <a class="demo-btn" href="#example-api">مستندات API در پایین صفحه</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="demo-wrap">
+    <section class="demo-intro">
+      <h2>چطور به صفحه اضافه می‌شود؟</h2>
+      <pre class="demo-code"><code>&lt;script src="bselect.js"&gt;&lt;/script&gt;
+&lt;div id="city"&gt;&lt;/div&gt;
+&lt;script&gt;
+  const select = new BSelect(document.getElementById('city'), {
+    data: ['تهران', 'شیراز', 'تبریز'],
+    searchable: true
+  });
+&lt;/script&gt;</code></pre>
+      <p class="demo-hint">
+        ماژول را می‌توان روی یک <code>&lt;select&gt;</code> واقعی هم اجرا کرد؛ در این حالت
+        گزینه‌ها و ترتیبشان مستقیماً از خود سلکت خوانده می‌شود.
+      </p>
+    </section>
+
+    <!-- 1 -->
+    <section class="demo-card" id="example-basic">
+      <div class="demo-card-head">
+        <span class="demo-num">۱</span>
+        <div>
+          <h3>ساده‌ترین حالت: آرایه‌ای از رشته‌ها</h3>
+          <p>گزینه‌ها از یک آرایه‌ی ساده تزریق می‌شوند. جستجو خاموش است و انتخاب، مقدار را برمی‌گرداند.</p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-basic"></div>
+          <div class="demo-readout">مقدار انتخابی: <strong id="out-basic">—</strong></div>
+        </div>
+        <pre class="demo-code"><code>new BSelect(el, {
+  data: ['تهران', 'شیراز', 'تبریز', 'مشهد'],
+  placeholder: 'شهر را انتخاب کنید',
+  onChange: ({ value }) =&gt; { /* ... */ }
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="demo-card" id="example-search">
+      <div class="demo-card-head">
+        <span class="demo-num">۲</span>
+        <div>
+          <h3>جستجو؛ قابل فعال و غیرفعال کردن در زمان اجرا</h3>
+          <p>
+            جستجو فارسی/عربی را نرمال می‌کند (ی/ي و ک/ك یکی می‌شوند) و نتیجه را هایلایت می‌کند.
+            با دکمه‌ی زیر <code>setSearchable()</code> را امتحان کنید.
+          </p>
+        </div>
+      </div>
+      <div class="demo-actions">
+        <button class="demo-btn" type="button" data-action="toggle-search">روشن / خاموش کردن جستجو</button>
+        <span class="demo-pill" id="search-state">جستجو: فعال</span>
+      </div>
+      <div class="demo-demo">
+        <div id="demo-search"></div>
+        <div class="demo-readout">مقدار انتخابی: <strong id="out-search">—</strong></div>
+      </div>
+      <pre class="demo-code"><code>const s = new BSelect(el, {
+  data: cities,
+  searchable: true,
+  onChange: ({ value, item }) =&gt; console.log(value, item)
+});
+
+s.setSearchable(false); // خاموش کردن جستجو
+s.setSearchable(true);  // روشن کردن دوباره</code></pre>
+    </section>
+
+    <!-- 3 -->
+    <section class="demo-card" id="example-native">
+      <div class="demo-card-head">
+        <span class="demo-num">۳</span>
+        <div>
+          <h3>ورود اطلاعات از یک <code>&lt;select&gt;</code> واقعی</h3>
+          <p>
+            همان HTML را می‌نویسید؛ ماژول گزینه‌ها و <code>&lt;optgroup&gt;</code>ها را می‌خواند.
+            مقدار <code>selected</code> و فرم‌ها هم حفظ می‌شوند.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <label class="demo-label" for="native-select">انتخاب استان (از HTML)</label>
+          <select id="native-select">
+            <optgroup label="استان تهران">
+              <option value="tehran" selected>تهران</option>
+              <option value="varamin">ورامین</option>
+              <option value="shahriar">شهریار</option>
+            </optgroup>
+            <optgroup label="استان فارس">
+              <option value="shiraz">شیراز</option>
+              <option value="marvdasht">مرودشت</option>
+              <option value="lar">لار</option>
+            </optgroup>
+            <optgroup label="استان اصفهان">
+              <option value="isfahan">اصفهان</option>
+              <option value="kashan">کاشان</option>
+            </optgroup>
+          </select>
+          <div class="demo-readout">مقدار انتخابی: <strong id="out-native">—</strong></div>
+        </div>
+        <pre class="demo-code"><code>&lt;select id="city"&gt;
+  &lt;optgroup label="استان تهران"&gt;
+    &lt;option value="tehran" selected&gt;تهران&lt;/option&gt;
+    &lt;option value="varamin"&gt;ورامین&lt;/option&gt;
+  &lt;/optgroup&gt;
+&lt;/select&gt;
+
+&lt;script&gt;
+  new BSelect(document.getElementById('city'), {
+    searchable: true
+  });
+&lt;/script&gt;</code></pre>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="demo-card" id="example-json">
+      <div class="demo-card-head">
+        <span class="demo-num">۴</span>
+        <div>
+          <h3>ورود اطلاعات از فایل JSON</h3>
+          <p>
+            با <code>dataUrl</code> فایل JSON (یا یک endpoint) به‌صورت خودکار خوانده می‌شود.
+            در این نمونه ۲۴ شهر از فایل <code>data/cities.json</code> بارگذاری شده و صفحه‌بندی فعال است.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-json"></div>
+          <div class="demo-readout">
+            مقدار انتخابی: <strong id="out-json">—</strong>
+          </div>
+          <div class="demo-readout">وضعیت بارگذاری: <strong id="out-json-status">در حال بارگذاری…</strong></div>
+        </div>
+        <pre class="demo-code"><code>new BSelect(el, {
+  dataUrl: 'data/cities.json',
+  searchable: true,
+  pagination: true,
+  pageSize: 6,
+  onLoad: ({ count }) =&gt; console.log(count)
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="demo-card" id="example-html">
+      <div class="demo-card-head">
+        <span class="demo-num">۵</span>
+        <div>
+          <h3>تزریق با رشته‌ی HTML</h3>
+          <p>
+            می‌توانید همان HTML را به‌صورت رشته بدهید؛ هم <code>&lt;select&gt;</code>، هم
+            <code>&lt;option&gt;</code> تکی و هم لیست <code>&lt;ul&gt;/&lt;li&gt;</code> پشتیبانی می‌شود.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-html"></div>
+          <div class="demo-readout">مقدار انتخابی: <strong id="out-html">—</strong></div>
+        </div>
+        <pre class="demo-code"><code>new BSelect(el, {
+  searchable: true,
+  data: `
+    &lt;ul&gt;
+      &lt;li data-value="k1"&gt;کلید یک&lt;/li&gt;
+      &lt;li data-value="k2"&gt;کلید دو&lt;/li&gt;
+    &lt;/ul&gt;`
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="demo-card" id="example-template">
+      <div class="demo-card-head">
+        <span class="demo-num">۶</span>
+        <div>
+          <h3>ورود اطلاعات از <code>&lt;template&gt;</code></h3>
+          <p>
+            کافی است شناسه‌ی template را به‌عنوان <code>data</code> بدهید. این روش برای
+            HTMLهایی که سمت سرور رندر می‌شوند بسیار مناسب است.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-template"></div>
+          <div class="demo-readout">مقدار انتخابی: <strong id="out-template">—</strong></div>
+        </div>
+        <pre class="demo-code"><code>&lt;template id="city-template"&gt;
+  &lt;option value="ra"&gt;رشت&lt;/option&gt;
+  &lt;option value="yz"&gt;یزد&lt;/option&gt;
+&lt;/template&gt;
+
+new BSelect(el, { data: 'city-template' });</code></pre>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="demo-card" id="example-multiple">
+      <div class="demo-card-head">
+        <span class="demo-num">۷</span>
+        <div>
+          <h3>چند انتخابی + چک‌باکس + خواندن نتیجه در callback</h3>
+          <p>
+            با <code>multiple: true</code> هر گزینه یک چک‌باکس می‌گیرد، «انتخاب همه» اضافه می‌شود
+            و با <code>maxSelected</code> می‌توان سقف انتخاب را محدود کرد.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-multi"></div>
+          <div class="demo-readout">
+            <span class="demo-tag">onChange</span>
+            <strong id="out-multi">—</strong>
+          </div>
+          <div class="demo-readout">
+            <span class="demo-tag">getSelectedItems()</span>
+            <span id="out-multi-items" class="demo-mono">[]</span>
+          </div>
+          <p class="demo-hint">حداکثر ۴ مورد را می‌توانید انتخاب کنید.</p>
+        </div>
+        <pre class="demo-code"><code>const s = new BSelect(el, {
+  data: skills,
+  multiple: true,
+  searchable: true,
+  maxSelected: 4,
+  onChange({ values, items }) {
+    console.log(values);      // ['js', 'css']
+    console.log(items);       // [{ value, label, ... }]
+  }
+});
+
+s.getValues();          // آرایه‌ی مقادیر
+s.getSelectedItems();   // آبجکت‌های کامل</code></pre>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="demo-card" id="example-grouped">
+      <div class="demo-card-head">
+        <span class="demo-num">۸</span>
+        <div>
+          <h3>دسته‌بندی + جمع‌شدن گروه‌ها + صفحه‌بندی</h3>
+          <p>
+            گروه‌ها از <code>group</code> در داده یا از <code>&lt;optgroup&gt;</code> ساخته می‌شوند.
+            با کلیک روی تیتر گروه، جمع می‌شود و با دکمه‌ی «انتخاب گروه»، همه‌ی اعضای آن
+            (مطابق فیلتر فعلی) انتخاب یا حذف می‌شوند.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-grouped"></div>
+          <div class="demo-readout">تعداد انتخاب‌شده: <strong id="out-grouped">0</strong></div>
+        </div>
+        <pre class="demo-code"><code>new BSelect(el, {
+  data: cities,        // هر آیتم: { value, label, group }
+  multiple: true,
+  searchable: true,
+  pagination: true,
+  pageSize: 4,
+  groupsCollapsed: false
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section class="demo-card" id="example-async">
+      <div class="demo-card-head">
+        <span class="demo-num">۹</span>
+        <div>
+          <h3>بارگذاری غیرهمزمان (asyncData)</h3>
+          <p>
+            اگر داده‌ها را از API می‌گیرید، <code>asyncData(done, fail)</code> را بدهید؛
+            اسپینر نمایش داده می‌شود و بعد از رسیدن داده، لیست پر می‌شود.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo">
+          <div id="demo-async"></div>
+          <div class="demo-readout">مقدار انتخابی: <strong id="out-async">—</strong></div>
+          <button class="demo-btn" type="button" data-action="reload-async">بارگذاری دوباره</button>
+        </div>
+        <pre class="demo-code"><code>new BSelect(el, {
+  searchable: true,
+  asyncData(done, fail) {
+    fetch('/api/cities')
+      .then(r =&gt; r.json())
+      .then(done)
+      .catch(fail);
+  }
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="demo-card" id="example-api">
+      <div class="demo-card-head">
+        <span class="demo-num">۱۰</span>
+        <div>
+          <h3>همه‌ی قابلیت‌ها با هم + کنترل API</h3>
+          <p>
+            چند انتخابی، جستجو، دسته‌بندی، صفحه‌بندی و تم دلخواه. دکمه‌ها متدهای عمومی
+            ماژول را صدا می‌زنند.
+          </p>
+        </div>
+      </div>
+      <div class="demo-demo demo-demo--wide demo-theme">
+        <div id="demo-api"></div>
+        <div class="demo-actionbar">
+          <button class="demo-btn" type="button" data-action="toggle-api-search">تغییر جستجو</button>
+          <button class="demo-btn" type="button" data-action="toggle-api-multiple">تغییر حالت چند انتخابی</button>
+          <button class="demo-btn" type="button" data-action="set-api-values">انتخاب تهران و شیراز</button>
+          <button class="demo-btn" type="button" data-action="clear-api">پاک کردن</button>
+          <button class="demo-btn" type="button" data-action="add-api">افزودن گزینه</button>
+          <button class="demo-btn" type="button" data-action="remove-api">حذف آخرین گزینه</button>
+          <button class="demo-btn" type="button" data-action="disable-api">غیرفعال</button>
+          <button class="demo-btn" type="button" data-action="enable-api">فعال</button>
+          <button class="demo-btn" type="button" data-action="destroy-api">destroy</button>
+          <button class="demo-btn" type="button" data-action="recreate-api">ساخت دوباره</button>
+        </div>
+        <div class="demo-readout demo-readout--stack">
+          <div><span class="demo-tag">getValues()</span> <span id="out-api-values" class="demo-mono">[]</span></div>
+          <div><span class="demo-tag">getSelectedItems()</span> <span id="out-api-items" class="demo-mono">[]</span></div>
+          <div><span class="demo-tag">وضعیت</span> <span id="out-api-state" class="demo-mono">—</span></div>
+        </div>
+      </div>
+      <pre class="demo-code"><code>const s = new BSelect(el, {
+  data: cities,
+  multiple: true,
+  searchable: true,
+  pagination: true,
+  pageSize: 5,
+  groups: true,
+  groupsCollapsed: false
+});
+
+s.setValues(['tehran', 'shiraz']);
+s.setSearchable(false);
+s.setMultiple(false);
+s.setData(newData, { keepSelection: true });
+s.addOptions([{ value: 'x', label: 'گزینه‌ی جدید' }]);
+s.removeOption('x');
+s.enable(); s.disable(); s.destroy();</code></pre>
+    </section>
+
+    <!-- 11 -->
+    <section class="demo-card" id="example-css">
+      <div class="demo-card-head">
+        <span class="demo-num">۱۱</span>
+        <div>
+          <h3>تم دلخواه با CSS Variables</h3>
+          <p>
+            CSS داخل JS است، اما رنگ‌ها با متغیرهای CSS تعریف شده‌اند؛ کافی است آن‌ها را
+            روی هر container بازنویسی کنید.
+          </p>
+        </div>
+      </div>
+      <div class="demo-grid">
+        <div class="demo-demo demo-theme-purple">
+          <div id="demo-theme"></div>
+          <div class="demo-readout">مقدار انتخابی: <strong id="out-theme">—</strong></div>
+        </div>
+        <pre class="demo-code"><code>.my-panel .BSelect {
+  --B-primary: #7c3aed;
+  --B-primary-soft: rgba(124, 58, 237, .13);
+  --B-border: #ddd6fe;
+  --B-radius: 16px;
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="demo-log-card">
+      <div class="demo-card-head">
+        <span class="demo-num">⌘</span>
+        <div>
+          <h3>گزارش رویدادها</h3>
+          <p>همه‌ی نمونه‌ها رویدادهای خود را اینجا ثبت می‌کنند تا رفتار ماژول را ببینید.</p>
+        </div>
+        <button class="demo-btn demo-btn--ghost" type="button" id="clear-log">پاک کردن</button>
+      </div>
+      <ol class="demo-log" id="event-log"></ol>
+    </section>
+
+    <section class="demo-cheatsheet">
+      <h2>متدهای عمومی</h2>
+      <div class="demo-table-wrap">
+        <table class="demo-table">
+          <thead>
+            <tr><th>متد</th><th>توضیح</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>getValue()</code></td><td>مقدار انتخاب‌شده (در حالت چند انتخابی، آرایه)</td></tr>
+            <tr><td><code>getValues()</code></td><td>همیشه آرایه‌ای از مقادیر</td></tr>
+            <tr><td><code>getSelectedItems()</code></td><td>آبجکت کامل گزینه‌های انتخاب‌شده (value، label، group، data)</td></tr>
+            <tr><td><code>setValues(vals)</code> / <code>select(v)</code> / <code>deselect(v)</code></td><td>تغییر انتخاب‌ها از کد</td></tr>
+            <tr><td><code>clear()</code></td><td>حذف همه‌ی انتخاب‌ها</td></tr>
+            <tr><td><code>setData(data)</code></td><td>جایگزینی گزینه‌ها (با حفظ انتخاب)</td></tr>
+            <tr><td><code>addOptions(items)</code> / <code>removeOption(v)</code></td><td>افزودن/حذف گزینه</td></tr>
+            <tr><td><code>setSearchable(bool)</code> / <code>setMultiple(bool)</code></td><td>تغییر قابلیت‌ها در زمان اجرا</td></tr>
+            <tr><td><code>open()</code> / <code>close()</code> / <code>toggle()</code></td><td>کنترل باز بودن لیست</td></tr>
+            <tr><td><code>enable()</code> / <code>disable()</code> / <code>setDisabled(bool)</code></td><td>فعال/غیرفعال کردن</td></tr>
+            <tr><td><code>on(event, fn)</code> / <code>off(event, fn)</code></td><td>گوش دادن به رویدادها</td></tr>
+            <tr><td><code>refresh()</code> / <code>destroy()</code></td><td>رندر دوباره / حذف کامل و بازگرداندن HTML اولیه</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="demo-hint">
+        رویدادهای سفارشی: <code>bselect:change</code>، <code>bselect:select</code>،
+        <code>bselect:deselect</code>، <code>bselect:open</code>، <code>bselect:close</code>،
+        <code>bselect:search</code>، <code>bselect:pagechange</code>،
+        <code>bselect:maxselected</code>، <code>bselect:load</code>،
+        <code>bselect:clear</code>، <code>bselect:toggle</code> و <code>bselect:error</code>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="demo-footer">
+    <p>BSelect — مجوز GPL-3.0-or-later — بدون هیچ وابستگی خارجی.</p>
+  </footer>
+
+  <!-- داده‌ی نمونه برای روش «template» -->
+  <template id="city-template">
+    <option value="rasht" data-description="مرکز گیلان">رشت</option>
+    <option value="yazd" data-description="شهر بادگیرها">یزد</option>
+    <option value="kerman" data-description="مرکز استان کرمان">کرمان</option>
+    <option value="ahvaz" data-description="مرکز خوزستان">اهواز</option>
+    <option value="bam" data-description="شهر ارگ تاریخی">بم</option>
+  </template>
+
+  <script src="../bselect.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>
